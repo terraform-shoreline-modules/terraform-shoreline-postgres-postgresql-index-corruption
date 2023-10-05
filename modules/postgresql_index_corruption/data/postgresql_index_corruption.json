@@ -1,0 +1,162 @@
+{
+  "name": "postgresql_index_corruption",
+  "description": "PostgreSQL Index Corruption refers to a situation where the indexes of a PostgreSQL database become corrupted or damaged. This can cause problems with database queries, leading to errors and degraded performance. When this occurs, it is usually necessary to repair the indexes to restore the database to its normal state. Failure to address index corruption issues can result in data loss or other serious consequences.",
+  "params": [
+    {
+      "name": "TABLE_NAME",
+      "value": ""
+    },
+    {
+      "name": "PATH_TO_BACKUP_FILE",
+      "value": ""
+    },
+    {
+      "name": "DATABASE_PATH",
+      "value": ""
+    },
+    {
+      "name": "DATABASE_NAME",
+      "value": ""
+    },
+    {
+      "name": "HOST_NAME",
+      "value": ""
+    },
+    {
+      "name": "K8S_CLUSTER_NAME",
+      "value": ""
+    },
+    {
+      "name": "NAMESPACE",
+      "value": ""
+    }
+  ],
+  "cells": [
+    {
+      "name": "cell_1",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## PostgreSQL Index Corruption\nPostgreSQL Index Corruption refers to a situation where the indexes of a PostgreSQL database become corrupted or damaged. This can cause problems with database queries, leading to errors and degraded performance. When this occurs, it is usually necessary to repair the indexes to restore the database to its normal state. Failure to address index corruption issues can result in data loss or other serious consequences."
+    },
+    {
+      "name": "cell_2",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check PostgreSQL version"
+    },
+    {
+      "name": "cell_3",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `sudo -u postgres psql -c \"SELECT version();\"`"
+    },
+    {
+      "name": "cell_4",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check the number of indexes in the database"
+    },
+    {
+      "name": "cell_5",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `sudo -u postgres psql -d ${DATABASE_NAME} -c \"\\diS+\"`"
+    },
+    {
+      "name": "cell_6",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check for index corruption in a specific table"
+    },
+    {
+      "name": "cell_7",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `sudo -u postgres psql -d ${DATABASE_NAME} -c \"SELECT * FROM pgstattuple(${TABLE_NAME})\"`"
+    },
+    {
+      "name": "cell_8",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check for general corruption in the database"
+    },
+    {
+      "name": "cell_9",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `sudo -u postgres pg_dumpall | gzip -9 > dump.sql.gz && gunzip -c dump.sql.gz | psql ${DATABASE_NAME}`"
+    },
+    {
+      "name": "cell_10",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Rebuild all indexes in a specific table"
+    },
+    {
+      "name": "cell_11",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `sudo -u postgres psql -d ${DATABASE_NAME} -c \"REINDEX TABLE ${TABLE_NAME};\"`"
+    },
+    {
+      "name": "cell_12",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Rebuild all indexes in the entire database"
+    },
+    {
+      "name": "cell_13",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `sudo -u postgres psql -d ${DATABASE_NAME} -c \"REINDEX DATABASE ${DATABASE_NAME};\"`"
+    },
+    {
+      "name": "cell_14",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Analyze a specific table to update its statistics"
+    },
+    {
+      "name": "cell_15",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `sudo -u postgres psql -d ${DATABASE_NAME} -c \"ANALYZE ${TABLE_NAME};\"`"
+    },
+    {
+      "name": "cell_16",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Analyze the entire database to update its statistics"
+    },
+    {
+      "name": "cell_17",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `sudo -u postgres psql -d ${DATABASE_NAME} -c \"ANALYZE;\"`"
+    },
+    {
+      "name": "cell_18",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Database maintenance: Incorrect execution of database maintenance tasks, such as vacuuming or reindexing, can cause index corruption."
+    },
+    {
+      "name": "cell_19",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "host | host_name=$HOST_NAME | invoke_db_status_check($DATABASE_PATH, $DATABASE_NAME)"
+    },
+    {
+      "name": "cell_20",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## If repair is not possible or does not resolve the issue, consider restoring from a backup of the database that was taken prior to the index corruption issue."
+    },
+    {
+      "name": "cell_21",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "host | host_name=$HOST_NAME | invoke_pg_restore_db($PATH_TO_BACKUP_FILE, $DATABASE_NAME)"
+    }
+  ]
+}
